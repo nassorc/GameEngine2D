@@ -155,12 +155,12 @@ protected:
 	void sDoAction(const Action& action) {
 		if (action.type() == "START") {
 			if (action.name() == "RIGHT") m_player->getComponent<CInput>().right = true;
-			if (action.name() == "LEFT") m_player->getComponent<CInput>().left = true;
-			if (action.name() == "UP") m_player->getComponent<CInput>().up = true;
-			if (action.name() == "DOWN") m_player->getComponent<CInput>().down = true;
-			if (action.name() == "TOGGLE_COLLISION") m_drawCollision = !m_drawCollision;
-			if (action.name() == "TOGGLE_TEXTURE") m_drawTextures = !m_drawTextures;
-			if (action.name() == "SHOOT") m_player->getComponent<CInput>().shoot = true;
+			else if (action.name() == "LEFT") m_player->getComponent<CInput>().left = true;
+			else if (action.name() == "UP") m_player->getComponent<CInput>().up = true;
+			else if (action.name() == "DOWN") m_player->getComponent<CInput>().down = true;
+			else if (action.name() == "TOGGLE_COLLISION") m_drawCollision = !m_drawCollision;
+			else if (action.name() == "TOGGLE_TEXTURE") m_drawTextures = !m_drawTextures;
+			else if (action.name() == "SHOOT") m_player->getComponent<CInput>().shoot = true;
 		}
 		else if (action.type() == "END") {
 			if (action.name() == "RIGHT") m_player->getComponent<CInput>().right = false;
