@@ -70,6 +70,21 @@ void GameEngine::sUserInput() {
 
 			currentScene()->doAction(Action(currentScene()->getActionMap().at(event.key.code), actionType));
 		}
+
+		// mouse inputs are not mapped
+		// mouse position is relative to the window
+		sf::Vector2f mpos(sf::Mouse::getPosition(m_window).x, sf::Mouse::getPosition(m_window).y);
+
+		if (event.type == sf::Event::MouseButtonPressed) {
+			switch (event.mouseButton.button) {
+			case sf::Mouse::Left: { currentScene()->doAction(Action("LEFT_CLICK", "START", mpos)); break; }
+			case sf::Mouse::Middle: {break; }
+			case sf::Mouse::Right: {break; }
+			}
+		}
+		if (event.type == sf::Event::MouseMoved) {
+			currentScene()->doAction(Action("MOUSE_MOVE", "START", sf::Vector2f(event.mouseMove.x, event.mouseMove.y)));
+		}
 	}
 }
 

@@ -31,8 +31,11 @@ protected:
 	bool                     m_drawCollision  = false;
 	bool                     m_drawGrid       = false;
 	bool                     m_ghostPlayer    = false;
+	bool                     m_editorMode     = true;
 	Physics                  m_physics;
 
+	sf::Vector2f             m_mPos;
+	sf::RectangleShape       m_cursor;
 
 	void init(const std::string& levelPath) {
 		// register action
@@ -98,6 +101,7 @@ protected:
 				sf::Vector2f pos = gridToMidPixel(x, y, tile);
 				tile->addComponent<CTransform>(pos, sf::Vector2f(0.f, 0.f), 0);
 				tile->addComponent<CBoundingBox>(sf::Vector2f(ani.animation.getSize().x, ani.animation.getSize().y));
+				tile->addComponent<CDraggable>();
 			}
 			else if (type == "Dec") {
 				float x, y;
@@ -111,6 +115,8 @@ protected:
 				y = m_game->window().getSize().y - (y * 64) - (ani.animation.getSize().y / 2);
 
 				tile->addComponent<CTransform>(sf::Vector2f(x, y), sf::Vector2f(0.f, 0.f), 0);
+				tile->addComponent<CDraggable>();
+
 			}
 			else if (type == "Player") {
 				float x, y, cx, cy, sx, sy, sm, gy;
@@ -151,7 +157,23 @@ protected:
 		bullet->addComponent<CBoundingBox>(sf::Vector2f(20, 20));
 		bullet->addComponent<CLifespan>(40);
 	}
+	bool IsInside(sf::Vector2f pos, std::shared_ptr<Entity> e) {
+		auto ePos = e->getComponent<CTransform>().pos;
+		auto size = e->getComponent<CAnimation>().animation.getSize();
 
+		float dx = fabs(pos.x - ePos.x);
+		float dy = fabs(pos.y - ePos.y);
+
+		return (dx <= size.x / 2) && (dy <= size.y / 2);
+	}
+	sf::Vector2f windowToWorld(const sf::Vector2f& window) const {
+		// x coord of variable view is the "world" x coord of the center of the window
+		auto view = m_game->window().getView();
+		// world x left hand side
+		float wx = view.getCenter().x - m_game->window().getSize().x / 2;
+		float wy = view.getCenter().y - m_game->window().getSize().y / 2;
+		return sf::Vector2f(window.x + wx, window.y + wy);
+	}
 	void sDoAction(const Action& action) {
 		if (action.type() == "START") {
 			if (action.name() == "RIGHT") m_player->getComponent<CInput>().right = true;
@@ -161,6 +183,29 @@ protected:
 			else if (action.name() == "TOGGLE_COLLISION") m_drawCollision = !m_drawCollision;
 			else if (action.name() == "TOGGLE_TEXTURE") m_drawTextures = !m_drawTextures;
 			else if (action.name() == "SHOOT") m_player->getComponent<CInput>().shoot = true;
+			else if (action.name() == "LEFT_CLICK") {
+				sf::Vector2f worldPos = windowToWorld(action.pos());
+				worldPos.x = ((int)worldPos.x / 64);
+				worldPos.y = ((int)worldPos.y / 64);
+				std::cout << "Mouse Clicked " << worldPos.x << " " << worldPos.y << std::endl;
+
+				for (auto e : m_entityManager.getEntities()) {
+					// if mouse pointer is in entity and has draggable component
+					if (e->hasComponent<CDraggable>() && IsInside(windowToWorld(action.pos()), e)) {
+						// flip value
+						e->getComponent<CDraggable>().dragging = !e->getComponent<CDraggable>().dragging;
+					}
+				}
+
+			}
+			else if (action.name() == "MOUSE_MOVE") {
+				// lock cursor into a grid cell
+
+				sf::Vector2f wp = windowToWorld(action.pos());
+
+				m_mPos.x = ((int)wp.x / 64) * 64 + 32;
+				m_mPos.y = ((int)wp.y / 64) * 64 + 32;
+			}
 		}
 		else if (action.type() == "END") {
 			if (action.name() == "RIGHT") m_player->getComponent<CInput>().right = false;
@@ -396,6 +441,16 @@ protected:
 				}
 			}
 		}
+
+		// draw cursor
+		m_cursor.setOutlineThickness(2);
+		m_cursor.setOutlineColor(sf::Color(0, 0, 0));
+		m_cursor.setFillColor(sf::Color(0, 0, 0, 0));
+		m_cursor.setSize(sf::Vector2f(64, 64));
+		m_cursor.setOrigin(32, 32);
+		m_cursor.setPosition(m_mPos.x, m_mPos.y);
+		m_game->window().draw(m_cursor);
+
 		m_game->window().display();
 
 	}
@@ -417,6 +472,15 @@ protected:
 		// called when you hit escape
 
 	}
+
+	void sDragAndDrop() {
+		for (auto e : m_entityManager.getEntities()) {
+			if (e->hasComponent<CDraggable>() && e->getComponent<CDraggable>().dragging) {
+				e->getComponent<CTransform>().pos = m_mPos;
+			}
+		}
+	}
+
 public:
 	Scene_Play(GameEngine* gameEngine, const std::string& levelPath)
 		: Scene(gameEngine)
@@ -430,6 +494,9 @@ public:
 		sLifespan();
 		sCollision();
 		sAnimation();
+		if (m_editorMode) {
+			sDragAndDrop();
+		}
 		sRender();
 	}
 };

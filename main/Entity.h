@@ -13,7 +13,8 @@ typedef std::tuple<
 	CBoundingBox,
 	CAnimation,
 	CGravity,
-	CState
+	CState,
+	CDraggable
 > ComponentTuple;
 
 // how to get a specfic component without an identifier:
