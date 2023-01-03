@@ -6,6 +6,7 @@
 #include "Physics.h"
 #include <fstream>
 #include <cstdlib>
+#include <cmath>
 
 
 // <Texture specification> ===========================
@@ -32,6 +33,7 @@ protected:
 	bool                     m_drawGrid       = false;
 	bool                     m_ghostPlayer    = false;
 	bool                     m_editorMode     = true;
+	bool                     m_captureLevel   = false;
 	Physics                  m_physics;
 
 	sf::Vector2f             m_mPos;
@@ -49,6 +51,7 @@ protected:
 		registerAction(sf::Keyboard::W, "UP");
 		registerAction(sf::Keyboard::S, "DOWN");
 		registerAction(sf::Keyboard::Space, "SHOOT");
+		registerAction(sf::Keyboard::Z, "CAPTURE");
 
 
 		// load grid text asset
@@ -183,6 +186,7 @@ protected:
 			else if (action.name() == "TOGGLE_COLLISION") m_drawCollision = !m_drawCollision;
 			else if (action.name() == "TOGGLE_TEXTURE") m_drawTextures = !m_drawTextures;
 			else if (action.name() == "SHOOT") m_player->getComponent<CInput>().shoot = true;
+			else if (action.name() == "CAPTURE") m_captureLevel = !m_captureLevel;
 			else if (action.name() == "LEFT_CLICK") {
 				sf::Vector2f worldPos = windowToWorld(action.pos());
 				worldPos.x = ((int)worldPos.x / 64);
@@ -476,9 +480,42 @@ protected:
 	void sDragAndDrop() {
 		for (auto e : m_entityManager.getEntities()) {
 			if (e->hasComponent<CDraggable>() && e->getComponent<CDraggable>().dragging) {
-				e->getComponent<CTransform>().pos = m_mPos;
+				if (e->getComponent<CAnimation>().animation.getSize().x > 64 && e->getComponent<CAnimation>().animation.getSize().y > 64) {
+					float dx{ e->getComponent<CAnimation>().animation.getSize().x / 64 * 2};
+					float dy{ e->getComponent<CAnimation>().animation.getSize().y / 64 * 2 };
+
+					e->getComponent<CTransform>().pos.x = m_mPos.x + e->getComponent<CAnimation>().animation.getSize().x / dx;
+					e->getComponent<CTransform>().pos.y = m_mPos.y - e->getComponent<CAnimation>().animation.getSize().y / dy;
+				}
+				else {
+					e->getComponent<CTransform>().pos = m_mPos;
+
+				}
 			}
 		}
+	}
+
+	void sCaptureLevel() {
+		// display all entities x and y position
+		for (auto e : m_entityManager.getEntities()) {
+			std::string type, animName;
+			float x, y;
+
+			type = e->tag();
+			animName = e->getComponent<CAnimation>().animation.getName();
+			x = (e->getComponent<CTransform>().pos.x - (e->getComponent<CAnimation>().animation.getSize().x / 2)) / 64;
+			//y = (e->getComponent<CAnimation>().animation.getSize().x / 2) + (e->getComponent<CTransform>().pos.y / 64) + m_game->window().getSize().y;
+			y = fabs(-(e->getComponent<CTransform>().pos.y - m_game->window().getSize().y + e->getComponent<CAnimation>().animation.getSize().x / 2) / 64);
+			std::cout << type << " " << animName << " " << x << " " << y << std::endl;
+
+		
+		}
+		m_captureLevel = false;
+	
+		//gridX = gridX * 64 + (animation.animation.getSize().x / 2);
+		//                                     
+		//gridY = m_game->window().getSize().y - (gridY * 64) - (animation.animation.getSize().y / 2);
+		// window.y + halfsize 
 	}
 
 public:
@@ -496,6 +533,9 @@ public:
 		sAnimation();
 		if (m_editorMode) {
 			sDragAndDrop();
+		}
+		if (m_captureLevel) {
+			sCaptureLevel();
 		}
 		sRender();
 	}
