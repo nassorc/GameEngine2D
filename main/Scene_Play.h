@@ -455,6 +455,14 @@ protected:
 		m_cursor.setPosition(m_mPos.x, m_mPos.y);
 		m_game->window().draw(m_cursor);
 
+		// texture gui
+		gTextureSheet();
+
+		// test gui
+	/*	sf::View inv;
+		inv.reset(sf::FloatRect(0,0,200, 300));
+		inv.setViewport(sf::FloatRect(0.8f, 0, 0.2f, 0.3f));*/
+
 		m_game->window().display();
 
 	}
@@ -516,6 +524,18 @@ protected:
 		//                                     
 		//gridY = m_game->window().getSize().y - (gridY * 64) - (animation.animation.getSize().y / 2);
 		// window.y + halfsize 
+	}
+
+	void gTextureSheet() {
+		sf::RectangleShape overlay;
+		overlay.setPosition(sf::Vector2f(32.f, 32.f));
+		overlay.setSize(sf::Vector2f(200.f, 400.f));
+		overlay.setFillColor(sf::Color(10,10,10,200));
+		overlay.setOutlineThickness(2.f);
+		overlay.setOutlineColor(sf::Color(255,255,255,255));
+
+
+		m_game->window().draw(overlay);
 	}
 
 public:
