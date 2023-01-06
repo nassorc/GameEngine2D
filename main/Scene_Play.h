@@ -487,17 +487,23 @@ protected:
 	void sDragAndDrop() {
 		for (auto e : m_entityManager.getEntities()) {
 			if (e->hasComponent<CDraggable>() && e->getComponent<CDraggable>().dragging) {
-				if (e->getComponent<CAnimation>().animation.getSize().x > 64 && e->getComponent<CAnimation>().animation.getSize().y > 64) {
+				/*if (e->getComponent<CAnimation>().animation.getSize().x > 64 && e->getComponent<CAnimation>().animation.getSize().y > 64) {
 					float dx{ e->getComponent<CAnimation>().animation.getSize().x / 64 * 2};
 					float dy{ e->getComponent<CAnimation>().animation.getSize().y / 64 * 2 };
 
 					e->getComponent<CTransform>().pos.x = m_mPos.x + e->getComponent<CAnimation>().animation.getSize().x / dx;
 					e->getComponent<CTransform>().pos.y = m_mPos.y - e->getComponent<CAnimation>().animation.getSize().y / dy;
-				}
-				else {
-					e->getComponent<CTransform>().pos = m_mPos;
+				}*/
+	
+				auto& transform = e->getComponent<CTransform>();
+				sf::Vector2f animSize = e->getComponent<CAnimation>().animation.getSize();
+				transform.pos.x = m_mPos.x + (animSize.x / 2) - 32;
+				transform.pos.y = m_mPos.y - (animSize.y / 2) + 32; // ;
 
-				}
+
+	
+
+				
 			}
 		}
 	}
