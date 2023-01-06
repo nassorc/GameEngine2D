@@ -16,7 +16,7 @@ protected:
 	sf::Text                   m_menuText;
 	size_t                     m_selectedMenuIndex = 0;
 	std::array<std::string, 3> m_menuStrings{"level1", "level2", "level3"};
-	std::array<std::string, 3> m_menuLevelPaths{ "level1.txt", "level2.txt", "level3.txt" };
+	std::array<std::string, 3> m_menuLevelPaths{ "level1.txt", "testLevel.txt", "level3.txt" };
 
 
 	std::vector<sf::Text>    m_fontEntities;

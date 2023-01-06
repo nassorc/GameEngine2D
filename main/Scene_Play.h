@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cmath>
+#include <fstream>
 
 
 // <Texture specification> ===========================
@@ -110,7 +111,7 @@ protected:
 				float x, y;
 				std::string aniName;
 				fin >> aniName >> x >> y;
-				auto tile = m_entityManager.addEntity("Tile");
+				auto tile = m_entityManager.addEntity("Dec");
 
 				auto& ani = tile->addComponent<CAnimation>(m_game->getAssets().getAnimation(aniName, true));
 
@@ -217,7 +218,6 @@ protected:
 			if (action.name() == "UP") m_player->getComponent<CInput>().up = false;
 			if (action.name() == "DOWN") m_player->getComponent<CInput>().down = false;
 			if (action.name() == "SHOOT") m_player->getComponent<CInput>().shoot = false; m_player->getComponent<CInput>().canShoot = true;
-
 		}
 	}
 
@@ -455,13 +455,12 @@ protected:
 		m_cursor.setPosition(m_mPos.x, m_mPos.y);
 		m_game->window().draw(m_cursor);
 
-		// texture gui
-		gTextureSheet();
-
 		// test gui
 	/*	sf::View inv;
 		inv.reset(sf::FloatRect(0,0,200, 300));
 		inv.setViewport(sf::FloatRect(0.8f, 0, 0.2f, 0.3f));*/
+
+		gInventory();
 
 		m_game->window().display();
 
@@ -505,6 +504,13 @@ protected:
 
 	void sCaptureLevel() {
 		// display all entities x and y position
+
+		std::ofstream file("testLevel.txt", std::ios::out);
+
+		if (!file) {
+			std::cout << "Failed to open file" << std::endl;
+		}
+
 		for (auto e : m_entityManager.getEntities()) {
 			std::string type, animName;
 			float x, y;
@@ -513,12 +519,31 @@ protected:
 			animName = e->getComponent<CAnimation>().animation.getName();
 			x = (e->getComponent<CTransform>().pos.x - (e->getComponent<CAnimation>().animation.getSize().x / 2)) / 64;
 			//y = (e->getComponent<CAnimation>().animation.getSize().x / 2) + (e->getComponent<CTransform>().pos.y / 64) + m_game->window().getSize().y;
-			y = fabs(-(e->getComponent<CTransform>().pos.y - m_game->window().getSize().y + e->getComponent<CAnimation>().animation.getSize().x / 2) / 64);
-			std::cout << type << " " << animName << " " << x << " " << y << std::endl;
+			y = ceil(fabs(-(e->getComponent<CTransform>().pos.y - m_game->window().getSize().y + e->getComponent<CAnimation>().animation.getSize().y / 2) / 64));
+			if (type == "Player") {
+				float cx, cy, sx, sy, sm, g;
+				std::string weapon;
+				x = m_playerConfig.X;
+				y = m_playerConfig.Y;
+				cx = e->getComponent<CBoundingBox>().size.x;
+				cy = e->getComponent<CBoundingBox>().size.y;
+				sx = m_playerConfig.SPEED;
+				sy = m_playerConfig.JUMP;
+				sm = m_playerConfig.MAXSPEED;
+				g = e->getComponent<CGravity>().gravity;
+				weapon = m_playerConfig.WEAPON;
 
+				file << type << " " << x << " " << y + 1 << " " << cx << " " << cy << " " << sx << " " << sy << " " << sm << " " << g << " " << weapon << " \n";
+				continue;
+
+			}
+			std::cout << type << " " << animName << " " << x << " " << y << std::endl;
+			file << type << " " << animName << " " << x << " " << y << "\n";
 		
 		}
 		m_captureLevel = false;
+		file.close();
+
 	
 		//gridX = gridX * 64 + (animation.animation.getSize().x / 2);
 		//                                     
@@ -526,16 +551,54 @@ protected:
 		// window.y + halfsize 
 	}
 
-	void gTextureSheet() {
-		sf::RectangleShape overlay;
-		overlay.setPosition(sf::Vector2f(32.f, 32.f));
-		overlay.setSize(sf::Vector2f(200.f, 400.f));
-		overlay.setFillColor(sf::Color(10,10,10,200));
-		overlay.setOutlineThickness(2.f);
-		overlay.setOutlineColor(sf::Color(255,255,255,255));
+	void saveLevel(std::string type, std::string name, float x, float y) {
+		std::ofstream file("testLevel.txt", std::ios::out);
+
+		if (!file) {
+			std::cout << "Failed to open file" << std::endl;
+		}
+
+		file << type << " " << name << " " << x << " " << y << "\n";
+
+		file.close();
+		return;
+	}
+
+	void gInventory() {
+		// view before change
+		sf::View originalView = m_game->window().getView();
+		sf::View view;
+		view.reset(sf::FloatRect(0,0,200, 800));
+		view.setViewport(sf::FloatRect(0.75f, 0, 0.2f, 0.8f));
+
+		m_game->window().setView(view);
+
+		sf::RectangleShape background(sf::Vector2f(200, 800));
+		background.setFillColor(sf::Color(220, 60, 110, 130));
+		background.setPosition(10, 10);
+
+		m_game->window().draw(background);
 
 
-		m_game->window().draw(overlay);
+		for (auto e : m_entityManager.getEntities()) {
+			if (e->hasComponent<CAnimation>()) {
+				e->getComponent<CAnimation>().animation.getSprite().setPosition(sf::Vector2f(47.f, 47.f));
+				m_game->window().draw(e->getComponent<CAnimation>().animation.getSprite());
+
+			}
+
+			/*if (!e->hasComponent<CAnimation>()) continue;
+
+			
+
+			m_game->window().draw(e->getComponent<Animation>().getSprite());
+
+			break;*/
+			break;
+		}
+
+
+		m_game->window().setView(originalView);
 	}
 
 public:
