@@ -33,7 +33,7 @@ protected:
 	bool                     m_drawCollision  = false;
 	bool                     m_drawGrid       = false;
 	bool                     m_ghostPlayer    = false;
-	bool                     m_editorMode     = true;
+	bool                     m_editorMode     = false;
 	bool                     m_captureLevel   = false;
 	Physics                  m_physics;
 
@@ -460,7 +460,11 @@ protected:
 		inv.reset(sf::FloatRect(0,0,200, 300));
 		inv.setViewport(sf::FloatRect(0.8f, 0, 0.2f, 0.3f));*/
 
-		gInventory();
+		if (m_editorMode) {
+			// display texture sheet gui
+			gInventory();
+
+		}
 
 		m_game->window().display();
 
@@ -585,26 +589,57 @@ protected:
 
 		m_game->window().draw(background);
 
-
-		for (auto e : m_entityManager.getEntities()) {
-			if (e->hasComponent<CAnimation>()) {
-				e->getComponent<CAnimation>().animation.getSprite().setPosition(sf::Vector2f(47.f, 47.f));
-				m_game->window().draw(e->getComponent<CAnimation>().animation.getSprite());
-
+		int row{ 1 };
+		int col{ 1 };
+		int c{ 0 };
+		
+		for (auto item : m_game->getAssets().getAnimations()) {
+			if (c % 3 == 0) {
+				++row;
+				col = 1;
 			}
-
-			/*if (!e->hasComponent<CAnimation>()) continue;
-
+			auto animation = item.second.getSprite();
+			animation.setPosition(sf::Vector2f(47.f * col, 47.f * row));
+			animation.scale(sf::Vector2f(0.25f, 0.3f));
+			m_game->window().draw(animation);
 			
-
-			m_game->window().draw(e->getComponent<Animation>().getSprite());
-
-			break;*/
-			break;
+			++col;
+			++c;
 		}
 
+		//std::cout << sf::Mouse::getPosition(m_game->window()).x << " " << view.getTransform(). << std::endl;
+		if (sf::Mouse::getPosition(m_game->window()).x > 700 && sf::Mouse::getPosition(m_game->window()).x < 1200) {
+			if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+				std::cout << "pressed\n";
+			}
+		}
+
+//		for (auto i : m_game->getAssets().getAnimations()) {
+//			auto e = i.second;
+//;			if (c % 3 == 0) {
+//				++rowCounter;
+//			}
+//			if (e->hasComponent<CAnimation>()) {
+//				e->getComponent<CAnimation>().animation.getSprite().setPosition(sf::Vector2f(47.f, 47.f * rowCounter));
+//				m_game->window().draw(e->getComponent<CAnimation>().animation.getSprite());
+//
+//			}
+//			++c;
+//			/*if (!e->hasComponent<CAnimation>()) continue;
+//
+//			
+//
+//			m_game->window().draw(e->getComponent<Animation>().getSprite());
+//
+//			break;*/
+//		}
+		/*for (const auto& [key, value] : myMap) {
+			std::cout << key << " has value " << value << std::endl;
+		}*/
 
 		m_game->window().setView(originalView);
+
+		// use rect contain to check if mouse is in rect
 	}
 
 public:

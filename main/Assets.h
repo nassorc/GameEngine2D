@@ -61,6 +61,9 @@ public:
 	Animation & getAnimation(const std::string& name, bool b) {
 		return m_animationMap[name];
 	}
+	AnimationMap getAnimations() {
+		return m_animationMap;
+	}
 	sf::Font& getFont(const std::string& name) {}
 
 	size_t getTextureMapSize() const {
